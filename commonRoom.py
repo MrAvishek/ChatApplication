@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import messagebox
 import socket
 import subprocess
 
@@ -31,7 +30,9 @@ class LoginInterface:
 
     def join_room(self):
         # Add functionality to join a room
-        messagebox.showinfo("Join Room", "Functionality to join a room will be implemented here.")
+        subprocess.Popen(["python", "varifyClient.py"])
+        # self.master.destroy()
+        # messagebox.showinfo("Join Room", "Functionality to join a room will be implemented here.")
 
     def exit_application(self):
         # Send a shutdown signal to the server

@@ -13,7 +13,7 @@ WHITE = "white"
 FONT = ("Helvetica", 17)
 BUTTON_FONT = ("Helvetica", 15)
 SMALL_FONT = ("Helvetica", 13)
-Impath = r"background.png"
+Impath = r"images\background.png"
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 

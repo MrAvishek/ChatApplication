@@ -32,7 +32,7 @@ def varifyPerson(room_code,room_password):
                 subprocess.Popen(["python","client.py"])
 
                 return
-        messagebox.showinfo("Room Not Found", "Try Creating a New Room")
+        messagebox.showerror("Room Not Found", "Try Creating a New Room")
 
 root = tk.Tk()
 root.title("Join Room")

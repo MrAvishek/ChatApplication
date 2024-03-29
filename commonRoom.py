@@ -7,7 +7,7 @@ class LoginInterface:
     def __init__(self, master):
         self.master = master
         master.title("Chat Room Login")
-        master.geometry("400x300")
+        master.geometry("400x400")
 
         self.create_room_button = tk.Button(master, text="Create Room", command=self.create_room, bg="blue", fg="white", font=("Helvetica", 16))
         self.create_room_button.pack(pady=20)
@@ -25,8 +25,9 @@ class LoginInterface:
         self.server_socket.connect((self.server_host, self.server_port))
 
     def create_room(self):
-        # Add functionality to create a room
-        messagebox.showinfo("Create Room", "Functionality to create a room will be implemented here.")
+        subprocess.Popen(["python", "createRoom.py"])
+        self.master.destroy()
+        # messagebox.showinfo("Create Room", "Functionality to create a room will be implemented here.")
 
     def join_room(self):
         # Add functionality to join a room
@@ -40,7 +41,7 @@ class LoginInterface:
 
 def main():
     root = tk.Tk()
-    login_interface = LoginInterface(root)
+    LoginInterface(root)
     root.mainloop()
 
 

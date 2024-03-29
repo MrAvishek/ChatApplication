@@ -9,7 +9,7 @@ PORT = 1234
 LISTENER_LIMIT = 5
 active_clients = {}
 lock = threading.Lock()
-subprocess.Popen(["python", "loginInterface.py"])
+subprocess.Popen(["python", "commonRoom.py"])
 def listen_for_messages(client, username):
     try:
         while True:

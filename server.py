@@ -3,6 +3,7 @@ import threading
 import time
 import traceback
 import subprocess
+import os
 
 HOST = '127.0.0.1'
 PORT = 1234
@@ -18,25 +19,28 @@ def listen_for_messages(client, username):
                 raise ConnectionError("Connection closed by client")
                 
             if data == b'SHUTDOWN':
-                print("Shutdown signal received from client.")
+                print("💻: Shutdown signal received from client.")
                 break  # Exit the loop to gracefully close the connection
             
             if data.startswith(b'FILE:'):
-                handle_file_transfer(data, username)
+                print("FILE called")
+                handle_file_data(data, username)
+            if data.decode('ascii') == 'exit':
+                print("the exit message got " + message)
+                exit_message = f"🏃{username} Left "
+                log_to_file(exit_message)
+                send_messages_to_all(exit_message, client)
+                with lock:
+                    active_clients.pop(username)
+                client.close()
+                break
+                
             else:
                 message = data.decode('utf-8')
-                if message.lower() == 'exit':
-                    exit_message = f"{username} exited the chat"
-                    log_to_file(exit_message)
-                    send_messages_to_all(exit_message, client)
-                    with lock:
-                        active_clients.pop(username)
-                    client.close()
-                    break
-                else:
-                    log_message = f"{username}: {message}"
-                    log_to_file(log_message)
-                    send_messages_to_all(log_message, client)
+                log_message = f"{username}: {message}"
+                log_to_file(log_message)
+                send_messages_to_all(log_message, client)
+            print("datareceived from client " +data.decode('utf-8'))
     except ConnectionError as ce:
         print(f"Error in listen_for_messages for client {username}: {ce}")
     except Exception as e:
@@ -44,6 +48,26 @@ def listen_for_messages(client, username):
         traceback.print_exc()
 
 
+# Inside handle_file_data function
+def handle_file_data(data):
+    # Extract file name and content
+    print("handle_file_dataexecuted")
+    file_data = data[len(b'FILE:'):].decode('utf-8')
+    file_name, file_content = file_data.split(':', 1)
+
+    # Path to the directory where files will be stored
+    directory = "sharedFile"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # Save the file to the sharedFile directory
+    file_path = os.path.join(directory, file_name)
+    with open(file_path, 'w') as file:
+        file.write(file_content)
+
+    # add_message(f"File '{file_name}' saved successfully in 'sharedFile' directory.")
+
+        
 def handle_file_transfer(data, sender_username):
     # Extract file name and content
     file_data = data[len(b'FILE:'):].decode('utf-8')
@@ -80,7 +104,7 @@ def client_handler(client):
             if username:
                 with lock:
                     active_clients[username] = client
-                join_message = f"{username} joined the chat"
+                join_message = f"🙋: {username} joined the chat"
                 log_to_file(join_message)
                 send_messages_to_all(join_message, client)
                 break
@@ -94,7 +118,7 @@ def client_handler(client):
 
 def log_to_file(message):
     try:
-        with open('chat_log.txt', 'a') as f:
+        with open('chat_log.txt', 'a', encoding='utf-8') as f:  # Specify encoding
             f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - {message}\n")
     except Exception as e:
         print(f"Error writing to log file: {e}")
@@ -114,7 +138,7 @@ def main():
     while True:
         try:
             client, address = server.accept()
-            print(f"Successfully connected to client {address[0]}:{address[1]}")
+            print(f"💻: Successfully connected to client {address[0]}:{address[1]}")
             threading.Thread(target=client_handler, args=(client,)).start()
         except Exception as e:
             print(f"Error accepting client connection: {e}")

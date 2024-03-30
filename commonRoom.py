@@ -25,7 +25,7 @@ class LoginInterface:
 
     def create_room(self):
         subprocess.Popen(["python", "createRoom.py"])
-        self.master.destroy()
+        # self.master.destroy()
         # messagebox.showinfo("Create Room", "Functionality to create a room will be implemented here.")
 
     def join_room(self):

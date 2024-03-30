@@ -15,6 +15,7 @@ BUTTON_FONT = ("Helvetica", 17)
 SMALL_FONT = ("Helvetica", 13)
 ICON_FONT = ("Helvetica",22,"bold")
 FILE_FONT = ("Helvetica",22,"bold")
+EXIT_FONT= ("Helvetica", 20)
 Impath = r"images\background.png"
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,7 +36,7 @@ def connect():
     try:
         client.connect((HOST, PORT))
         print("Successfully connected to server")
-        add_message("[SERVER] Successfully connected to the server", is_server=True)
+        add_message("💻: Successfully connected to the server", is_server=True)
     except:
         messagebox.showerror("Unable to connect to server", f"Unable to connect to server {HOST} {PORT}")
 
@@ -56,7 +57,7 @@ def send_message(event=None):
     message = message_textbox.get()
     if message != '':
         client.sendall(message.encode())
-        add_message(f"{username}: {message}", sent_by_me=True)
+        add_message(f"✧{username}: {message}", sent_by_me=True)
         message_textbox.delete(0, len(message))
     else:
         messagebox.showerror("Empty message", "Message cannot be empty")
@@ -66,6 +67,7 @@ def send_file(file_path):
         with open(file_path, 'rb') as file:
             file_data = file.read()
             client.sendall(b'FILE:' + file_data)
+            print("data is sent",file_path)
             add_message(f"File '{file_path}' sent successfully.")
     except FileNotFoundError:
         messagebox.showerror("File not found", "The selected file does not exist.")
@@ -78,7 +80,14 @@ def select_file():
         send_file(file_path)
 
 def exit_application():
-    root.destroy()
+    try:
+        client.sendall('exit'.encode('ascii'))  
+        print("exit message Sent")# Send exit message to the server
+    except Exception as e:
+        print(f"Error sending exit message to server: {e}")
+        # traceback.print_exc()
+    root.destroy()  
+
 
 def handle_file_data(data):
     # Extract file name and content
@@ -89,7 +98,7 @@ def handle_file_data(data):
     save_file(file_name, file_content)
 
 def save_file(file_name, file_content):
-    file_path = filedialog.asksaveasfilename(initialfile=file_name, defaultextension=".txt")
+    file_path = filedialog.asksaveasfilename(initialfile=file_name, defaultextension=".pdf")
     if file_path:
         with open(file_path, 'w') as file:
             file.write(file_content)
@@ -139,10 +148,10 @@ username_label.pack(side=tk.LEFT, padx=6, pady=10)
 username_textbox = tk.Entry(top_frame, font=FONT, bg="#FEFBF6", fg="#000000", width=23)
 username_textbox.pack(side=tk.LEFT, padx=10)
 
-username_button = tk.Button(top_frame, text="Join", font=BUTTON_FONT, bg="#4F6F52", fg="#FEFBF6", command=connect)
+username_button = tk.Button(top_frame, text="Join", font=BUTTON_FONT, bg="#4F6F52", fg="#FEFBF6",height=1, command=connect)
 username_button.pack(side=tk.LEFT, padx=5)
 
-exit_button = tk.Button(top_frame, text="Exit", font=BUTTON_FONT, bg="#FA7070", fg=WHITE, command=exit_application)
+exit_button = tk.Button(top_frame, text="🏃", font=EXIT_FONT, bg="#FA7070", fg="#000000", command=exit_application,height=1)
 exit_button.pack(side=tk.RIGHT, padx=5, pady=10)
 
 message_textbox = tk.Entry(bottom_frame, font=FONT, bg="#B0C5A4", fg=WHITE, width=31)

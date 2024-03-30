@@ -62,7 +62,9 @@ def handle_file_data(data, username, client):
         if not os.path.exists(directory):
             os.makedirs(directory)
         # Save the file to the sharedFile directory
-        file_path = os.path.join(directory, f"received_file_{time.strftime('%Y%m%d%H%M%S')}.mp4")
+        file_info, file_data = data[len(b'FILE:'):].split(b':', 1)
+        file_name = file_info.decode()
+        file_path = os.path.join(directory, file_name)
         with open(file_path, 'wb') as file:
             file_data = data[len(b'FILE:'):]
             file.write(file_data)

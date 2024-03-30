@@ -2,6 +2,7 @@ import socket
 import threading
 import tkinter as tk
 from tkinter import scrolledtext, messagebox, filedialog, PhotoImage
+import os
 
 HOST = '127.0.0.1'
 PORT = 1234
@@ -64,8 +65,9 @@ def send_message(event=None):
 
 def send_file(file_path):
     try:
+        file_name = os.path.basename(file_path)
         with open(file_path, 'rb') as file:
-            client.sendall(b'FILE:')
+            client.sendall(f'FILE:{file_name}:'.encode())
             while True:
                 file_data = file.read(1024)
                 if not file_data:

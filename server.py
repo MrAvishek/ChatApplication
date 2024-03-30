@@ -23,24 +23,29 @@ def listen_for_messages(client, username):
                 break  # Exit the loop to gracefully close the connection
             
             if data.startswith(b'FILE:'):
-                print("FILE called")
-                handle_file_data(data, username)
-            if data.decode('ascii') == 'exit':
-                print("the exit message got " + message)
-                exit_message = f"🏃{username} Left "
-                log_to_file(exit_message)
-                send_messages_to_all(exit_message, client)
-                with lock:
-                    active_clients.pop(username)
-                client.close()
-                break
+                # print("FILE called")
+                handle_file_data(data, username, client)
+            try:
+                decoded_data = data.decode('ascii')
+                if decoded_data == 'exit':
+                    print("the exit message got " + decoded_data)
+                    exit_message = f"🏃{username} Left "
+                    log_to_file(exit_message)
+                    send_messages_to_all(exit_message, client)
+                    with lock:
+                        active_clients.pop(username)
+                    client.close()
+                    break
+            except UnicodeDecodeError:
+                # Handle non-ASCII data here
+                pass
                 
             else:
                 message = data.decode('utf-8')
                 log_message = f"{username}: {message}"
                 log_to_file(log_message)
                 send_messages_to_all(log_message, client)
-            print("datareceived from client " +data.decode('utf-8'))
+            # print("datareceived from client " +data.decode('utf-8'))
     except ConnectionError as ce:
         print(f"Error in listen_for_messages for client {username}: {ce}")
     except Exception as e:
@@ -49,23 +54,31 @@ def listen_for_messages(client, username):
 
 
 # Inside handle_file_data function
-def handle_file_data(data):
-    # Extract file name and content
-    print("handle_file_dataexecuted")
-    file_data = data[len(b'FILE:'):].decode('utf-8')
-    file_name, file_content = file_data.split(':', 1)
+def handle_file_data(data, username, client):
+    
+    try:
+        print("file received from ", username)
+        directory = "sharedFile"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        # Save the file to the sharedFile directory
+        file_path = os.path.join(directory, f"received_file_{time.strftime('%Y%m%d%H%M%S')}.mp4")
+        with open(file_path, 'wb') as file:
+            file_data = data[len(b'FILE:'):]
+            file.write(file_data)
+            while True:
+                file_data = client.recv(4096)
+                if file_data.endswith(b'ENDFILE'):
+                    file.write(file_data[:-len(b'ENDFILE')])
+                    break
+                file.write(file_data)
+        print(f"File saved to {file_path}")
 
-    # Path to the directory where files will be stored
-    directory = "sharedFile"
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    # Save the file to the sharedFile directory
-    file_path = os.path.join(directory, file_name)
-    with open(file_path, 'w') as file:
-        file.write(file_content)
-
-    # add_message(f"File '{file_name}' saved successfully in 'sharedFile' directory.")
+        # add_message(f"File '{file_name}' saved successfully in 'sharedFile' directory.")
+    except Exception as e:
+            print(f"Error handling file data from {username}: {e}")
+            traceback.print_exc()
+        
 
         
 def handle_file_transfer(data, sender_username):

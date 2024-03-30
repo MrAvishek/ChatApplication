@@ -65,9 +65,13 @@ def send_message(event=None):
 def send_file(file_path):
     try:
         with open(file_path, 'rb') as file:
-            file_data = file.read()
-            client.sendall(b'FILE:' + file_data)
-            print("data is sent",file_path)
+            client.sendall(b'FILE:')
+            while True:
+                file_data = file.read(1024)
+                if not file_data:
+                    break
+                client.sendall(file_data)
+            client.sendall(b'ENDFILE')
             add_message(f"File '{file_path}' sent successfully.")
     except FileNotFoundError:
         messagebox.showerror("File not found", "The selected file does not exist.")
@@ -90,17 +94,23 @@ def exit_application():
 
 
 def handle_file_data(data):
+    pass
     # Extract file name and content
-    file_data = data[len(b'FILE:'):].decode('utf-8')
-    file_name, file_content = file_data.split(':', 1)
+    # file_data = data[len(b'FILE:'):]
+    # file_content = file_data.split(b':', 1)[1]  # Split by the first colon to separate file name and content
+    # file_name = file_data.split(b':', 1)[0].decode('utf-8')  # Decode file name from bytes to string
 
-    # Save the file to the local filesystem
-    save_file(file_name, file_content)
+    # # Save the file to the local filesystem if the received data length matches the file content length
+    # if len(file_content) == len(data) - len(b'FILE:') - len(file_name) - 1:  # Subtracting lengths of prefixes and separator
+    #     save_file(file_name, file_content)
+    #     add_message(f"File '{file_name}' saved successfully.")
+    # else:
+    #     add_message("Incomplete file received. Please try again.")
 
 def save_file(file_name, file_content):
-    file_path = filedialog.asksaveasfilename(initialfile=file_name, defaultextension=".pdf")
+    file_path = filedialog.asksaveasfilename()
     if file_path:
-        with open(file_path, 'w') as file:
+        with open(file_path, 'wb') as file:
             file.write(file_content)
         add_message(f"File '{file_name}' saved successfully.")
 

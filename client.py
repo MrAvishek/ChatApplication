@@ -3,6 +3,7 @@ import threading
 import tkinter as tk
 from tkinter import scrolledtext, messagebox, filedialog, PhotoImage
 import os
+import traceback
 
 HOST = '127.0.0.1'
 PORT = 1234
@@ -18,6 +19,7 @@ ICON_FONT = ("Helvetica",22,"bold")
 FILE_FONT = ("Helvetica",22,"bold")
 EXIT_FONT= ("Helvetica", 20)
 Impath = r"images\background.png"
+save_downloaded_file =r"D:\Downloads"
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -96,18 +98,31 @@ def exit_application():
 
 
 def handle_file_data(data):
-    pass
-    # Extract file name and content
-    # file_data = data[len(b'FILE:'):]
-    # file_content = file_data.split(b':', 1)[1]  # Split by the first colon to separate file name and content
-    # file_name = file_data.split(b':', 1)[0].decode('utf-8')  # Decode file name from bytes to string
+    try:
+        print("file received from ", username)
+        downloaded_directory = save_downloaded_file
+        if not os.path.exists(downloaded_directory):
+            os.makedirs(downloaded_directory)
+        # Save the file to the sharedFile downloaded_directory
+        file_info, file_data = data[len(b'FILE:'):].split(b':', 1)
+        file_name = file_info.decode()
+        file_path = os.path.join(downloaded_directory, file_name)
+        with open(file_path, 'wb') as file:
+            file_data = data[len(b'FILE:'):]
+            file.write(file_data)
+            while True:
+                file_data = client.recv(4096)
+                if file_data.endswith(b'ENDFILE'):
+                    file.write(file_data[:-len(b'ENDFILE')])
+                    break
+                file.write(file_data)
+        print(f"File saved to {file_path}")
+        add_message(f"File '{file_name}' downloaded successfully.")
 
-    # # Save the file to the local filesystem if the received data length matches the file content length
-    # if len(file_content) == len(data) - len(b'FILE:') - len(file_name) - 1:  # Subtracting lengths of prefixes and separator
-    #     save_file(file_name, file_content)
-    #     add_message(f"File '{file_name}' saved successfully.")
-    # else:
-    #     add_message("Incomplete file received. Please try again.")
+        # add_message(f"File '{file_name}' saved successfully in 'sharedFile' directory.")
+    except Exception as e:
+            print(f"Error handling file data from {username}: {e}")
+            traceback.print_exc()
 
 def save_file(file_name, file_content):
     file_path = filedialog.asksaveasfilename()

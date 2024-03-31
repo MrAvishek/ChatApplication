@@ -45,6 +45,18 @@ def listen_for_messages(client, username):
                         files = list_files()
                         file_list_message = f"📁 File List:\n{os.linesep.join(files)}"
                         send_message_to_client(client, file_list_message)
+                        
+                if message.startswith("@getfile "):
+                    file_name = message.split(" ", 1)[1]
+                    file_path = os.path.join("sharedFile", file_name)
+                    print("fileName and path got " + file_name + file_path)
+                    if os.path.exists(file_path):
+                        print("function called")
+                        send_file_to_client(client, file_path,file_name)
+                    else:
+                        print("else called")
+                        send_message_to_client(client, f"File '{file_name}' not found.")
+                        
                 else:
                     log_message = f"{username}: {message}"
                     log_to_file(log_message)
@@ -89,6 +101,19 @@ def handle_file_data(data, username, client):
             print(f"Error handling file data from {username}: {e}")
             traceback.print_exc()
         
+def send_file_to_client(client, file_path,file_name):
+    try:
+        with open(file_path, 'rb') as file:
+            client.sendall(f'FILE:{file_name}:'.encode())
+            while True:
+                file_data = file.read(1024)
+                if not file_data:
+                    break
+                client.sendall(file_data)
+            client.sendall(b'ENDFILE')   
+    except Exception as e:
+        print(f"Error sending file to client: {e}")
+        traceback.print_exc()
 
         
 def handle_file_transfer(data, sender_username):

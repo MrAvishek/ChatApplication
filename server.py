@@ -5,7 +5,7 @@ import traceback
 import subprocess
 import os
 
-HOST = '127.0.0.1'
+HOST = '0.0.0.0'
 PORT = 1234
 LISTENER_LIMIT = 5
 active_clients = {}
@@ -18,9 +18,9 @@ def listen_for_messages(client, username):
             if not data:
                 raise ConnectionError("Connection closed by client")
                 
-            if data == b'SHUTDOWN':
-                print("💻: Shutdown signal received from client.")
-                break  # Exit the loop to gracefully close the connection
+            # if data == b'SHUTDOWN':
+            #     print("💻: Shutdown signal received from client.")
+            #     break  # Exit the loop to gracefully close the connection
             
             if data.startswith(b'FILE:'):
                 # print("FILE called")
@@ -37,14 +37,18 @@ def listen_for_messages(client, username):
                     client.close()
                     break
             except UnicodeDecodeError:
-                # Handle non-ASCII data here
                 pass
                 
             else:
                 message = data.decode('utf-8')
-                log_message = f"{username}: {message}"
-                log_to_file(log_message)
-                send_messages_to_all(log_message, client)
+                if message == '@listfiles':
+                        files = list_files()
+                        file_list_message = f"📁 File List:\n{os.linesep.join(files)}"
+                        send_message_to_client(client, file_list_message)
+                else:
+                    log_message = f"{username}: {message}"
+                    log_to_file(log_message)
+                    send_messages_to_all(log_message, client)
             # print("datareceived from client " +data.decode('utf-8'))
     except ConnectionError as ce:
         print(f"Error in listen_for_messages for client {username}: {ce}")
@@ -52,19 +56,23 @@ def listen_for_messages(client, username):
         print(f"Error in listen_for_messages for client {username}: {e}")
         traceback.print_exc()
 
+def list_files():
+    server_directory = "sharedFile"
+    files = os.listdir(server_directory)
+    return files
 
 # Inside handle_file_data function
 def handle_file_data(data, username, client):
     
     try:
         print("file received from ", username)
-        directory = "sharedFile"
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        # Save the file to the sharedFile directory
+        server_directory = "sharedFile"
+        if not os.path.exists(server_directory):
+            os.makedirs(server_directory)
+        # Save the file to the sharedFile server_directory
         file_info, file_data = data[len(b'FILE:'):].split(b':', 1)
         file_name = file_info.decode()
-        file_path = os.path.join(directory, file_name)
+        file_path = os.path.join(server_directory, file_name)
         with open(file_path, 'wb') as file:
             file_data = data[len(b'FILE:'):]
             file.write(file_data)

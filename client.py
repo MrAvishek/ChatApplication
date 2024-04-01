@@ -181,7 +181,7 @@ username_button.pack(side=tk.LEFT, padx=5)
 exit_button = tk.Button(top_frame, text="🏃", font=EXIT_FONT, bg="#FA7070", fg="#000000", command=exit_application,height=1)
 exit_button.pack(side=tk.RIGHT, padx=5, pady=10)
 
-message_textbox = tk.Entry(bottom_frame, font=FONT, bg="#B0C5A4", fg=WHITE, width=31)
+message_textbox = tk.Entry(bottom_frame, font=FONT, bg="#B0C5A4", fg=DARK_GREY, width=31)
 message_button = tk.Button(bottom_frame, text="⏎", font=ICON_FONT, bg=OCEAN_BLUE, fg="#1D242B", command=send_message,width=5)
 file_button = tk.Button(bottom_frame, text="📁", font=FILE_FONT, bg=OCEAN_BLUE, fg="#1D242B", command=select_file,width=1,padx=20)
 
